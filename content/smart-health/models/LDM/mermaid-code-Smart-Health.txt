@@ -1,0 +1,194 @@
+erDiagram
+
+patient {
+    int patient_id PK
+    varchar first_name
+    varchar middle_name
+    varchar last_name
+    varchar maternal_surname
+    date date_of_birth
+    char sex
+    varchar email
+    date registration_date
+    varchar street_address
+    varchar municipality
+    varchar department
+    char country_code
+}
+
+patient_phone {
+    int phone_id PK
+    int patient_id FK
+    varchar phone_number
+}
+
+patient_document {
+    int document_id PK
+    int patient_id FK
+    varchar document_type
+    varchar document_number
+}
+
+professional {
+    int professional_id PK
+    varchar registration_number
+    varchar first_name
+    varchar middle_name
+    varchar last_name
+    varchar email
+    date hire_date
+}
+
+specialty {
+    int specialty_id PK
+    varchar code
+    varchar name
+}
+
+professional_specialty {
+    int prof_spec_id PK
+    int professional_id FK
+    int specialty_id FK
+}
+
+room {
+    int room_id PK
+    varchar code
+    varchar name
+    varchar location
+}
+
+appointment {
+    int appointment_id PK
+    int patient_id FK
+    int professional_id FK
+    int room_id FK
+    date appointment_date
+    time start_time
+    time end_time
+    varchar status
+    text reason
+}
+
+clinical_record {
+    int clinical_record_id PK
+    int patient_id FK
+    int professional_id FK
+    int appointment_id FK
+    timestamp recorded_at
+    varchar record_type
+    text summary_text
+    json structured
+    int version
+}
+
+diagnosis {
+    int diagnosis_id PK
+    varchar cie_code
+    text description
+}
+
+clinical_record_diagnosis {
+    int cr_diag_id PK
+    int clinical_record_id FK
+    int diagnosis_id FK
+}
+
+procedure_catalog {
+    int procedure_id PK
+    varchar code
+    text description
+    numeric reference_price
+}
+
+clinical_record_procedure {
+    int cr_proc_id PK
+    int clinical_record_id FK
+    int procedure_id FK
+}
+
+prescription {
+    int prescription_id PK
+    int clinical_record_id FK
+    int professional_id FK
+    timestamp prescribed_at
+    text notes
+    varchar status
+}
+
+medication {
+    int medication_id PK
+    varchar atc_code
+    varchar commercial_name
+    varchar active_ingredient
+    varchar presentation
+}
+
+prescription_item {
+    int presc_item_id PK
+    int prescription_id FK
+    int medication_id FK
+    varchar dosage
+}
+
+insurer {
+    int insurer_id PK
+    varchar name
+    json contact
+}
+
+policy {
+    int policy_id PK
+    int insurer_id FK
+    varchar policy_number
+    text coverage_summary
+    date start_date
+    date end_date
+    varchar status
+}
+
+patient_policy {
+    int patient_policy_id PK
+    int patient_id FK
+    int policy_id FK
+}
+
+audit_log {
+    int audit_id PK
+    int entity_id FK
+    varchar entity_name
+    varchar action
+    json details
+    timestamp occurred_at
+    varchar ip
+    varchar application
+}
+
+patient ||--o{ patient_phone : "has"
+patient ||--o{ patient_document : "has"
+patient ||--o{ appointment : "books"
+patient ||--o{ clinical_record : "owns"
+patient ||--o{ patient_policy : "covered_by"
+
+professional ||--o{ appointment : "attends"
+professional ||--o{ clinical_record : "records"
+professional ||--o{ prescription : "issues"
+professional ||--o{ professional_specialty : "linked_to"
+specialty ||--o{ professional_specialty : "assigned_to"
+
+appointment }o--|| room : "takes_place_in"
+appointment ||--o{ clinical_record : "related_to"
+
+clinical_record ||--o{ prescription : "creates"
+clinical_record ||--o{ clinical_record_diagnosis : "has"
+clinical_record ||--o{ clinical_record_procedure : "uses"
+diagnosis ||--o{ clinical_record_diagnosis : "linked_to"
+procedure_catalog ||--o{ clinical_record_procedure : "performed_in"
+
+prescription ||--o{ prescription_item : "includes"
+medication ||--o{ prescription_item : "belongs_to"
+
+insurer ||--o{ policy : "offers"
+policy ||--o{ patient_policy : "assigned_to"
+
+audit_log ||--|| clinical_record : "tracks_changes"
